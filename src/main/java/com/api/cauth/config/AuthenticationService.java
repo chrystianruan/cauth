@@ -18,12 +18,13 @@ public class AuthenticationService {
         if (!request.getRequestURL().toString().endsWith("/save-product")) {
             if (!productRepository.findAll().isEmpty()) {
                 for (Product product : productRepository.findAll()) {
-                    if (accessKey == null || !accessKey.equals(product.getAccessKey())) {
-                        throw new BadCredentialsException("Invalid API Key");
+                    if (accessKey != null && accessKey.equals(product.getAccessKey())) {
+                        break;
                     }
                 }
             }
-
+        } else {
+            throw new BadCredentialsException("Invalid Token");
         }
 
         return new ApiKeyAuthentication(accessKey, AuthorityUtils.NO_AUTHORITIES);
