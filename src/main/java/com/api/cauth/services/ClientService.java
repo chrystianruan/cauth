@@ -7,6 +7,8 @@ import com.api.cauth.exceptions.PermissaoException;
 import com.api.cauth.repositories.ClientRepository;
 import com.api.cauth.repositories.PermissionRepository;
 import com.api.cauth.repositories.ProductRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ public class ClientService {
     private ProductRepository productRepository;
     @Autowired
     private PermissionRepository permissionRepository;
+
+    private final Logger log = LoggerFactory.getLogger(ClientService.class);
 
     public void save(String accessKey, ClientDTO clientDTO) throws Exception {
        try {
@@ -39,6 +43,7 @@ public class ClientService {
        } catch (PermissaoException e) {
            throw e;
        } catch (Exception e) {
+           log.error(e.getMessage());
            throw new Exception(e);
        }
 
