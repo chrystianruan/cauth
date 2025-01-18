@@ -2,6 +2,7 @@ package com.api.cauth.controllers;
 
 import com.api.cauth.dtos.ProductDTO;
 import com.api.cauth.entities.Product;
+import com.api.cauth.exceptions.PermissaoException;
 import com.api.cauth.services.ProductService;
 import com.api.cauth.utils.HashUtils;
 import com.api.cauth.utils.ResponseUtils;
@@ -25,7 +26,11 @@ public class ProductController {
         try {
             String accessKey = HashUtils.generateNewToken();
             productService.save(product, accessKey);
+
             return new ResponseEntity<>(ResponseUtils.makeMessageWithToken("Product saved successfully", accessKey), HttpStatus.OK);
+
+        } catch (PermissaoException e) {
+            return new ResponseEntity<>(ResponseUtils.makeMessage(e.getMessage()), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             return new ResponseEntity<>(ResponseUtils.makeMessage("Internal error"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
