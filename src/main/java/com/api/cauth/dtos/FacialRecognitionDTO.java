@@ -1,10 +1,9 @@
 package com.api.cauth.dtos;
 
-import com.api.cauth.entities.Client;
-
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class FacialRecognitionDTO {
     public ClientDTO client;
-    public List<String> permissions;
+    @JsonProperty("facial_image")
+    public String facialImage;
 }
