@@ -22,7 +22,7 @@ public class Client {
     @OneToOne
     @JoinColumn(name = "product_id")
     private Product product;
-    @Column(name = "facial_image")
-    private byte[] facialImage;
+    @Column(name = "path_image")
+    private String pathImage;
 
 }

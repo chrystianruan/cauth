@@ -17,7 +17,6 @@ public class FacialRecognitionController {
     @PostMapping
     public ResponseEntity<?> getFacialRecognition(@RequestBody FacialRecognitionDTO facialRecognitionDTO) {
         try {
-            // Chama o serviço para detectar rostos
             String result = facialRecognitionService.detectAndRespond(facialRecognitionDTO);
 
             return new ResponseEntity<>(result, HttpStatus.OK);

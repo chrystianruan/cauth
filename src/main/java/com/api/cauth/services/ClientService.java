@@ -12,6 +12,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Base64;
+import java.util.Date;
+
 @Service
 public class ClientService {
     @Autowired
@@ -21,6 +29,7 @@ public class ClientService {
     @Autowired
     private PermissionRepository permissionRepository;
 
+
     private final Logger log = LoggerFactory.getLogger(ClientService.class);
 
     public void save(String accessKey, ClientDTO clientDTO) throws Exception {
@@ -28,11 +37,13 @@ public class ClientService {
            if (clientRepository.existsByEmail(clientDTO.getEmail())) {
                throw new PermissaoException("Email already exists");
            }
+           String path = "/home/chrystian/Desktop/images_cauth/"+gerarNomeArquivo("user_img", "jpg");
            Client client = new Client();
            client.setName(clientDTO.getName());
            client.setEmail(clientDTO.getEmail());
            client.setProduct(productRepository.findByAccessKey(accessKey));
-           client.setFacialImage(clientDTO.getFacialImage().getBytes());
+           storeImage(clientDTO.getFacialImage(), path);
+           client.setPathImage(path);
            clientRepository.save(client);
            clientDTO.getPermissions().forEach(permission -> {
                Permission permissionEntity = new Permission();
@@ -47,5 +58,21 @@ public class ClientService {
            throw new Exception(e);
        }
 
+    }
+
+    public void storeImage(String base64Image, String path) {
+        byte[] bytes = Base64.getDecoder().decode(base64Image);
+        File file = new File(path);
+        file.getParentFile().mkdirs();
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(bytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String gerarNomeArquivo(String prefixo, String extensao) {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        return prefixo + "_" + timestamp + extensao;
     }
 }
