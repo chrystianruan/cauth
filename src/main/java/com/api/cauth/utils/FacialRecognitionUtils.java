@@ -34,6 +34,7 @@ public class FacialRecognitionUtils {
         for (Rect face : faces) {
             Imgproc.rectangle(image, face.tl(), face.br(), new Scalar(0, 255, 0), 3);
         }
+
         return image;
     }
 }
