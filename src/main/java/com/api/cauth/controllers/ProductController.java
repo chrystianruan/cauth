@@ -1,10 +1,9 @@
 package com.api.cauth.controllers;
 
 import com.api.cauth.dtos.ProductDTO;
-import com.api.cauth.entities.Product;
 import com.api.cauth.exceptions.PermissaoException;
 import com.api.cauth.services.ProductService;
-import com.api.cauth.utils.HashUtils;
+import com.api.cauth.utils.CryptUtils;
 import com.api.cauth.utils.ResponseUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +23,7 @@ public class ProductController {
     @PostMapping("/save-product")
     public ResponseEntity<Map<String, String>> save(@RequestBody ProductDTO product) {
         try {
-            String accessKey = HashUtils.generateNewToken();
+            String accessKey = CryptUtils.generateNewToken();
             productService.save(product, accessKey);
 
             return new ResponseEntity<>(ResponseUtils.makeMessageWithToken("Product saved successfully", accessKey), HttpStatus.OK);

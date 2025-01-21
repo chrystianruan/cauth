@@ -6,7 +6,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 @Component
-public class HashUtils {
+public class CryptUtils {
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final Base64.Encoder base64Encoder = Base64.getUrlEncoder();
 
@@ -15,4 +15,9 @@ public class HashUtils {
         secureRandom.nextBytes(randomBytes);
         return base64Encoder.encodeToString(randomBytes);
     }
+
+    public static byte[] convertBase64ToBytes(String base64) {
+        return Base64.getDecoder().decode(base64);
+    }
+
 }
