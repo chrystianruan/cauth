@@ -1,5 +1,6 @@
 package com.api.cauth.services;
 
+import com.api.cauth.StorageEnum;
 import com.api.cauth.dtos.ClientDTO;
 import com.api.cauth.entities.Client;
 import com.api.cauth.entities.Permission;
@@ -8,6 +9,7 @@ import com.api.cauth.repositories.ClientRepository;
 import com.api.cauth.repositories.PermissionRepository;
 import com.api.cauth.repositories.ProductRepository;
 import com.api.cauth.utils.CryptUtils;
+import com.api.cauth.utils.StorageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,10 +44,9 @@ public class ClientService {
            client.setEmail(clientDTO.getEmail());
            client.setProduct(productRepository.findByAccessKey(accessKey));
 
-           String pathFinal = "/home/chrystian/Desktop/images_cauth/"+gerarNomeArquivo("user", "jpg");
-           client.setPathImage(pathFinal);
+           client.setPathImage(StorageUtils.storeImage(clientDTO.getFacialImage(), StorageEnum.CLIENT));
 
-           storeImage(clientDTO.getFacialImage(), pathFinal);
+           StorageUtils.storeImage(clientDTO.getFacialImage(), StorageEnum.CLIENT);
 
            clientRepository.save(client);
            clientDTO.getPermissions().forEach(permission -> {
@@ -54,7 +55,8 @@ public class ClientService {
                permissionEntity.setClient(client);
                permissionRepository.save(permissionEntity);
            });
-       } catch (PermissaoException e) {
+       } catch (IOException | PermissaoException e) {
+           log.error(e.getMessage());
            throw e;
        } catch (Exception e) {
            log.error(e.getMessage());
@@ -63,17 +65,5 @@ public class ClientService {
 
     }
 
-    public void storeImage(String base64Image, String pathFinal) {
-        File file = new File(pathFinal);
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            fos.write(CryptUtils.convertBase64ToBytes(base64Image));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
-    public String gerarNomeArquivo(String prefixo, String extensao) {
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        return prefixo + "_" + timestamp +"."+extensao;
-    }
 }
