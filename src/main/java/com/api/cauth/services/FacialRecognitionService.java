@@ -73,7 +73,7 @@ public class FacialRecognitionService {
                 double[] confidence = new double[1];
                 model.predict(face, predictedLabel, confidence);
 
-                if (confidence[0] < 7800) {
+                if (confidence[0] < 10000) {
                     return clientRepository.findOne((long) predictedLabel[0]).toClientFoundDTO();
                 }
             }
