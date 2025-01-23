@@ -1,5 +1,6 @@
 package com.api.cauth.entities;
 
+import com.api.cauth.dtos.ProductDTO;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,4 +20,7 @@ public class Product {
     @Nullable
     private String accessKey;
 
+    public ProductDTO toProductDTO() {
+        return new ProductDTO(this.name, this.description, this.url);
+    }
 }

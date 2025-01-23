@@ -4,24 +4,19 @@ import com.api.cauth.StorageEnum;
 import com.api.cauth.dtos.ClientDTO;
 import com.api.cauth.entities.Client;
 import com.api.cauth.entities.Permission;
+import com.api.cauth.entities.Photo;
 import com.api.cauth.exceptions.PermissaoException;
 import com.api.cauth.repositories.ClientRepository;
 import com.api.cauth.repositories.PermissionRepository;
+import com.api.cauth.repositories.PhotoRepository;
 import com.api.cauth.repositories.ProductRepository;
-import com.api.cauth.utils.CryptUtils;
 import com.api.cauth.utils.StorageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Base64;
-import java.util.Date;
+import java.util.List;
 
 @Service
 public class ClientService {
@@ -31,6 +26,8 @@ public class ClientService {
     private ProductRepository productRepository;
     @Autowired
     private PermissionRepository permissionRepository;
+    @Autowired
+    private PhotoRepository photoRepository;
 
     private final Logger log = LoggerFactory.getLogger(ClientService.class);
 
@@ -43,18 +40,13 @@ public class ClientService {
            client.setName(clientDTO.getName());
            client.setEmail(clientDTO.getEmail());
            client.setProduct(productRepository.findByAccessKey(accessKey));
-
-           client.setPathImage(StorageUtils.storeImage(clientDTO.getFacialImage(), StorageEnum.CLIENT));
-
-           StorageUtils.storeImage(clientDTO.getFacialImage(), StorageEnum.CLIENT);
-
+           if (clientDTO.getFacialImages().size() < 7) {
+               throw new PermissaoException("You must send at least 7 photos");
+           }
            clientRepository.save(client);
-           clientDTO.getPermissions().forEach(permission -> {
-               Permission permissionEntity = new Permission();
-               permissionEntity.setAction(permission);
-               permissionEntity.setClient(client);
-               permissionRepository.save(permissionEntity);
-           });
+           savePhotos(clientDTO.getFacialImages(), client);
+           savePermissions(clientDTO.getPermissions(), client);
+
        } catch (IOException | PermissaoException e) {
            log.error(e.getMessage());
            throw e;
@@ -63,6 +55,30 @@ public class ClientService {
            throw new Exception(e);
        }
 
+    }
+
+    private void savePhotos(List<String> images, Client client) throws IOException {
+        for (String image : images) {
+            try {
+                String pathImage = StorageUtils.storeImage(image, StorageEnum.CLIENT);
+                Photo photo = new Photo();
+                photo.setClient(client);
+                photo.setPath(pathImage);
+                photoRepository.save(photo);
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            }
+        }
+    }
+
+    private void savePermissions(List<String> permissions, Client client) {
+        permissions.forEach(permission -> {
+            Permission permissionEntity = new Permission();
+            permissionEntity.setAction(permission);
+            permissionEntity.setClient(client);
+
+            permissionRepository.save(permissionEntity);
+        });
     }
 
 

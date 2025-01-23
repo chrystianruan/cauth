@@ -1,5 +1,6 @@
 package com.api.cauth.entities;
 
+import com.api.cauth.dtos.ClientFoundDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +23,12 @@ public class Client {
     @OneToOne
     @JoinColumn(name = "product_id")
     private Product product;
-    @Column(name = "path_image")
-    private String pathImage;
+    @OneToMany(mappedBy = "client")
+    private List<Photo> photos;
+
+
+    public ClientFoundDTO toClientFoundDTO() {
+        return new ClientFoundDTO(this.name, this.email, this.permissions.stream().map(Permission::getAction).toList(), this.product.toProductDTO());
+    }
 
 }

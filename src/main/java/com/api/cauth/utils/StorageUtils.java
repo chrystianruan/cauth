@@ -29,7 +29,7 @@ public class StorageUtils {
     }
 
     private static String gerarNomeArquivo(String prefixo, String extensao) {
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss_SSS").format(new Date());
         return prefixo + "_" + timestamp +"."+extensao;
     }
 }

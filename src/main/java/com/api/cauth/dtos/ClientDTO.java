@@ -12,7 +12,7 @@ import java.util.List;
 public class ClientDTO {
     public String name;
     public String email;
-    @JsonProperty("facial_image")
-    public String facialImage;
+    @JsonProperty("facial_images")
+    public List<String> facialImages;
     public List<String> permissions;
 }
