@@ -28,6 +28,7 @@ public class FacialRecognitionService {
             FacialRecognitionDTO facialRecognitionDTO = new FacialRecognitionDTO();
             facialRecognitionDTO.setClient(client);
             facialRecognitionDTO.setTrainingImage(preprocessImage(client.getPathImage()));
+            facialRecognitionDTOs.add(facialRecognitionDTO);
         }
         return facialRecognitionDTOs;
     }

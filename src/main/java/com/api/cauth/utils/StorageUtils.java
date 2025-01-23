@@ -11,8 +11,8 @@ import java.util.Date;
 
 
 public class StorageUtils {
-    private final static String pathStorageClientImage = "/path/images_cauth/";
-    private final static String pathStorageProcessedImage = "/path/images_processed_temp/";
+    private final static String pathStorageClientImage = "C:\\Users\\chrys\\Desktop\\images_cauth\\";
+    private final static String pathStorageProcessedImage = "C:\\Users\\chrys\\Desktop\\images_processed_temp\\";
 
     public static String storeImage(String base64Image, StorageEnum storageEnum) throws IOException {
         String pathFinal = pathStorageClientImage + gerarNomeArquivo("client", "jpg");

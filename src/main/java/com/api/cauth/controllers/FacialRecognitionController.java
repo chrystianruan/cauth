@@ -6,16 +6,16 @@ import com.api.cauth.repositories.ClientRepository;
 import com.api.cauth.services.FacialRecognitionService;
 import com.api.cauth.utils.ResponseUtils;
 import com.api.cauth.utils.StorageUtils;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import org.bytedeco.javacpp.Loader;
-import org.bytedeco.openblas.global.openblas;
-import org.bytedeco.openblas.global.openblas_nolapack;
 import org.bytedeco.opencv.opencv_java;
 import org.opencv.core.*;
+
 import org.opencv.face.FaceRecognizer;
 import org.opencv.face.LBPHFaceRecognizer;
 
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,55 +37,57 @@ public class FacialRecognitionController {
     public ResponseEntity<Map<String, String>> getFacialRecognition(@RequestBody String image) {
         try {
             System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-            String cascadePath = "path/cauth/src/main/resource/shaarcascade_frontalface_alt.xml";
+            Loader.load(opencv_java.class);
+            String cascadePath = "C:\\Users\\chrys\\Desktop\\projetos-pessoais\\cauth\\src\\main\\resources\\haarcascade_frontalface_alt.xml";
             CascadeClassifier faceDetector = new CascadeClassifier(cascadePath);
 
-            List<FacialRecognitionDTO> clientsWithImagesTrained = facialRecognitionService.createListClientsTrainingImages();
-
-            List<Mat> trainingImages = new ArrayList<>();
-            Mat labels = new Mat(clientsWithImagesTrained.size(), 1, CvType.CV_32SC1);
-            int i = 0;
-
-            for (FacialRecognitionDTO facialRecognitionDTO : clientsWithImagesTrained) {
-                labels.put(i, (int) (long) facialRecognitionDTO.getClient().getId());
-                trainingImages.add(facialRecognitionDTO.getTrainingImage());
-                i++;
-            }
-
-            FaceRecognizer recognizer = LBPHFaceRecognizer.create();
-            recognizer.train(trainingImages, labels);
-
-            String testImagePath = StorageUtils.storeImage(image, StorageEnum.PROCESSED_IMAGE);
-            Mat testImage = facialRecognitionService.preprocessImage(testImagePath);
+            String pathImage = StorageUtils.storeImage(image, StorageEnum.PROCESSED_IMAGE);
+            Mat imageRecebida = Imgcodecs.imread(pathImage);
 
             MatOfRect faceDetections = new MatOfRect();
-            faceDetector.detectMultiScale(testImage, faceDetections);
+            faceDetector.detectMultiScale(imageRecebida, faceDetections);
 
             if (faceDetections.toArray().length == 0) {
-                System.out.println("Nenhum rosto encontrado na imagem recebida.");
-                return null;
+                return ResponseEntity.ok().body(ResponseUtils.makeMessage("Nenhum rosto encontrado."));
             }
 
-            int[] label = new int[1];
-            double[] confidence = new double[1];
-            recognizer.predict(testImage, label, confidence);
+            List<Mat> images = new ArrayList<>();
+            List<Integer> labels = new ArrayList<>();
 
-            if (confidence[0] < 80.0) {
-                System.out.println("Reconhecido como: " +clientRepository.findById((long)label[0])+" com confiança: "+ confidence[0]);
-            } else {
-                System.out.println("Nenhuma correspondência encontrada.");
+            clientRepository.findAll().forEach(client -> {
+                Mat img = Imgcodecs.imread(client.getPathImage(), Imgcodecs.IMREAD_GRAYSCALE);
+                Imgproc.resize(img, img, new Size(200, 200));
+                images.add(img);
+                labels.add(client.getId().intValue());
+            });
+
+            FaceRecognizer model = LBPHFaceRecognizer.create();
+            model.train(images, new MatOfInt(labels.stream().mapToInt(i -> i).toArray()));
+
+            for (Rect rect : faceDetections.toArray()) {
+                Mat face = new Mat(imageRecebida, rect);
+                Imgproc.cvtColor(face, face, Imgproc.COLOR_BGR2GRAY);
+                Imgproc.resize(face, face, new Size(200, 200));
+
+                int[] predictedLabel = new int[1];
+                double[] confidence = new double[1];
+                model.predict(face, predictedLabel, confidence);
+
+                if (confidence[0] < 95) {
+                    return ResponseEntity.ok().body(ResponseUtils.makeMessage("Identificado como cliente: " + clientRepository.findOne((long) predictedLabel[0]).getName()));
+                } else {
+                    return ResponseEntity.ok().body(ResponseUtils.makeMessage("Rosto não reconhecido."));
+                }
             }
 
-            return ResponseEntity.ok().body(ResponseUtils.makeMessage("teste"));
-
+            return ResponseEntity.ok().body(ResponseUtils.makeMessage("Reconhecimento concluído."));
         }
         catch (IOException exception) {
-            return ResponseEntity.internalServerError().body(ResponseUtils.makeMessage("Erro ao gravar arquivo processado"));
+            return ResponseEntity.internalServerError().body(ResponseUtils.makeMessage("Erro ao processar imagem."));
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-
     }
 
 
